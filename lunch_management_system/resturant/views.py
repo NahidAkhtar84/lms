@@ -77,46 +77,6 @@ class ChampionResturants(APIView):
                 filter(resturant=dict["resturant"], date=date.today()-timedelta(1)).first()
             champion_day_before_yesterday = ChampionResturant.objects.\
                 filter(resturant=dict["resturant"], date=date.today()-timedelta(2)).first()
-            print("t", champion_yesterday, champion_day_before_yesterday)
-            if not champion_yesterday or not champion_day_before_yesterday:
-                expected_list.append(dict)
-                pass_vote=dict["vote__count"]
-
-        try:
-            _vote_count = expected_list[0]["vote__count"]
-        except:
-            _vote_count = 0
-        
-        result_list = []
-        for dict in expected_list:
-            resturant_object = Resturant.objects.get(id=dict["resturant"])
-            result_list.append(resturant_object)
-            
-        serializer = resturant_serializers.ChampionResturantSerializer(result_list, many=True, context={'vote_count': _vote_count})
-        return Response(
-            data=serializer.data,
-            status=status.HTTP_200_OK
-        )
-
-
-
-class FindChampionResturant(APIView):
-    permission_classes = (IsAdminUser,)
-
-    def get(self, request, pk=None, format=None):
-        resturant_list_with_count = Vote.objects.filter(vote=True, voting_date=date.today()).\
-            values("resturant").annotate(Count("vote")).order_by("-vote__count")
-
-        whole_list = list(resturant_list_with_count)
-        expected_list = []
-        pass_vote = 0
-        for dict in whole_list:
-            if dict["vote__count"] < pass_vote:
-                break
-            champion_yesterday = ChampionResturant.objects.\
-                filter(resturant=dict["resturant"], date=date.today()-timedelta(1)).first()
-            champion_day_before_yesterday = ChampionResturant.objects.\
-                filter(resturant=dict["resturant"], date=date.today()-timedelta(2)).first()
 
             if not champion_yesterday or not champion_day_before_yesterday:
                 expected_list.append(dict)
@@ -125,6 +85,10 @@ class FindChampionResturant(APIView):
             prev_champ = ChampionResturant.objects.filter(date=date.today()).delete()
         except:
             pass
+        try:
+            _vote_count = expected_list[0]["vote__count"]
+        except:
+            _vote_count = 0
         
         result_list = []
         for dict in expected_list:
@@ -145,7 +109,7 @@ class FindChampionResturant(APIView):
             else:
                return Response({"detail": "Champions could not save!"}, status=status.HTTP_400_BAD_REQUEST) 
             
-        serializer = resturant_serializers.ResturantSerializer(result_list, many=True)
+        serializer = resturant_serializers.ChampionResturantSerializer(result_list, many=True, context={'vote_count': _vote_count})
         return Response(
             data=serializer.data,
             status=status.HTTP_200_OK
