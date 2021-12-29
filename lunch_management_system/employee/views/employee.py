@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import APIView
 from rest_framework.generics import GenericAPIView
 
-from employee.models.user import User
+from django.contrib.auth.models import User
 from employee.serializers.employee_serializers import EmployeeCreateSerializer, EmployeeSerializer, EmployeeEditSerializer
 from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING, TYPE_ARRAY
 from drf_yasg.utils import swagger_auto_schema
@@ -24,6 +24,7 @@ class EmployeeAPIView(GenericAPIView):
                 user = User.objects.get(id=pk)
             except:
                 return Response({"message": "Invaild users"}, status=status.HTTP_404_NOT_FOUND)
+
             
             serializer = EmployeeSerializer(user)
 
@@ -62,7 +63,7 @@ class EmployeeAPIView(GenericAPIView):
         else:
            detail={"detail": serializer.errors}
            return Response(detail, status=status.HTTP_400_BAD_REQUEST)
-            
+        
         response_serializer = EmployeeSerializer(user_data)
 
            
@@ -80,24 +81,28 @@ class EmployeeAPIView(GenericAPIView):
     )
     def put(self, request, pk=None, format=None):
         if pk is not None:
-
+            user_data = request.data
             try:
                 user_obj = User.objects.get(id=pk, is_superuser=False)
             except:
                 return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-            serializer = EmployeeEditSerializer(user_obj, data=request.data, partial=True)
+            serializer = EmployeeEditSerializer(user_obj, data=user_data, partial=True)
             if serializer.is_valid():
                 serializer.save()
+                user_obj.set_password(serializer.data.get("password"))
+                user_obj.save()
 
             else:
-                return Response({"message": "Employee could not updated"}, status=status.HTTP_400_BAD_REQUEST)
+                detail={"detail": serializer.errors}
+                return Response(detail, status=status.HTTP_400_BAD_REQUEST)
+            response_serializer = EmployeeSerializer(user_obj)
 
-        return Response({"data": serializer.data, "detail": "Employee has been successfully updated."},
+        return Response({"data": response_serializer.data, "detail": "Employee has been successfully updated."},
                         status=status.HTTP_202_ACCEPTED)
 
-    
+
     def delete(self, request, pk=None, format=None):
         try:
             user_obj = User.objects.get(id=pk, is_superuser=False)

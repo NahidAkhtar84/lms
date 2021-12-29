@@ -79,8 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lunch_management_system.wsgi.application'
 
-AUTH_USER_MODEL = 'employee.User'
-
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

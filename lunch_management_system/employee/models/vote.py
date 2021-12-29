@@ -1,7 +1,7 @@
 from django.db import models
 from model_mixin.model_mixin import SimpleBaseModel
 from resturant.models.resturant import Resturant
-from employee.models.user import User
+from django.contrib.auth.models import User
 
 class Vote(SimpleBaseModel):
     employee = models.ForeignKey(User, related_name="voting_employee", on_delete=models.RESTRICT)
