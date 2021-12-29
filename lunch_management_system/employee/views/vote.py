@@ -8,6 +8,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import APIView
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING, TYPE_ARRAY
+from drf_yasg.utils import swagger_auto_schema
 
 from employee.models.vote import Vote
 from employee.serializers.vote_serializers import VoteCreateSerializer, VoteSerializer
@@ -16,6 +18,16 @@ from employee.serializers.vote_serializers import VoteCreateSerializer, VoteSeri
 class VoteAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=VoteCreateSerializer,
+        responses={
+            '201': 'CREATED Request',
+            '400': "Bad Request"
+        },
+        security=[],
+        operation_id='Create vote',
+        operation_description='Create of vote',
+    )
     def post(self, request, format=None):
         vote_data = request.data
         current_user = request.user

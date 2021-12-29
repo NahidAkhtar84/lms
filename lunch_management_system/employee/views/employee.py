@@ -6,14 +6,18 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import APIView
+from rest_framework.generics import GenericAPIView
 
 from employee.models.user import User
 from employee.serializers.employee_serializers import EmployeeCreateSerializer, EmployeeSerializer, EmployeeEditSerializer
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING, TYPE_ARRAY
+from drf_yasg.utils import swagger_auto_schema
  
 
-class EmployeeAPIView(APIView):
+class EmployeeAPIView(GenericAPIView):
     permission_classes = (IsAdminUser,)
 
+    
     def get(self, request, pk=None, format=None):
         if pk is not None:
             try:
@@ -36,6 +40,17 @@ class EmployeeAPIView(APIView):
             status=status.HTTP_200_OK
         )
 
+    @swagger_auto_schema(
+        request_body=EmployeeCreateSerializer,
+        # query_serializer=EmployeeSerializer,
+        responses={
+            '201': 'CREATED Request',
+            '400': "Bad Request"
+        },
+        security=[],
+        operation_id='Create employee',
+        operation_description='Create of employee',
+    )
     def post(self, request, format=None):
 
         user_data = request.data
@@ -53,7 +68,16 @@ class EmployeeAPIView(APIView):
            
         return Response({"data": response_serializer.data, "detail": "Employee has been successfully created."},
                         status=status.HTTP_201_CREATED)
-
+    @swagger_auto_schema(
+        request_body=EmployeeEditSerializer,
+        responses={
+            '202': 'UPDATED Request',
+            '400': "Bad Request"
+        },
+        security=[],
+        operation_id='Update employee',
+        operation_description='Update of employee',
+    )
     def put(self, request, pk=None, format=None):
         if pk is not None:
 
@@ -73,6 +97,7 @@ class EmployeeAPIView(APIView):
         return Response({"data": serializer.data, "detail": "Employee has been successfully updated."},
                         status=status.HTTP_202_ACCEPTED)
 
+    
     def delete(self, request, pk=None, format=None):
         try:
             user_obj = User.objects.get(id=pk, is_superuser=False)
