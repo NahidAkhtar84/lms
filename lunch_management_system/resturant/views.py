@@ -68,7 +68,6 @@ class ChampionResturants(APIView):
             values("resturant").annotate(Count("vote")).order_by("-vote__count")
 
         whole_list = list(resturant_list_with_count)
-        print("w", whole_list)
         expected_list = []
         pass_vote = 0
         for dict in whole_list:
@@ -122,6 +121,10 @@ class FindChampionResturant(APIView):
             if not champion_yesterday or not champion_day_before_yesterday:
                 expected_list.append(dict)
                 pass_vote=dict["vote__count"]
+        try:
+            prev_champ = ChampionResturant.objects.filter(date=date.today()).delete()
+        except:
+            pass
         
         result_list = []
         for dict in expected_list:
