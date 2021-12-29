@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import APIView
 
 from employee.models.user import User
-from employee.serializers.employee_serializers import EmployeeCreateSerializer, EmployeeSerializer
+from employee.serializers.employee_serializers import EmployeeCreateSerializer, EmployeeSerializer, EmployeeEditSerializer
  
 
 class EmployeeAPIView(APIView):
@@ -21,9 +21,10 @@ class EmployeeAPIView(APIView):
             except:
                 return Response({"message": "Invaild users"}, status=status.HTTP_404_NOT_FOUND)
             
+            serializer = EmployeeSerializer(user)
 
             return Response(
-                data=user,
+                data=serializer.data,
                 status=status.HTTP_200_OK
             )
 
@@ -52,4 +53,31 @@ class EmployeeAPIView(APIView):
            
         return Response({"data": response_serializer.data, "detail": "Employee has been successfully created."},
                         status=status.HTTP_201_CREATED)
-        
+
+    def put(self, request, pk=None, format=None):
+        if pk is not None:
+
+            try:
+                user_obj = User.objects.get(id=pk, is_superuser=False)
+            except:
+                return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+            serializer = EmployeeEditSerializer(user_obj, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+
+            else:
+                return Response({"message": "Employee could not updated"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"data": serializer.data, "detail": "Employee has been successfully updated."},
+                        status=status.HTTP_202_ACCEPTED)
+
+    def delete(self, request, pk=None, format=None):
+        try:
+            user_obj = User.objects.get(id=pk, is_superuser=False)
+        except:
+            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        user_obj.delete()
+
+        return Response({"message": "Data has been deleted!"}, status=status.HTTP_200_OK)
